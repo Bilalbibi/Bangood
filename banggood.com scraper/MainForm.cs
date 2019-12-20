@@ -21,6 +21,7 @@ using OfficeOpenXml;
 using System.Threading.Tasks.Dataflow;
 using System.Speech.Synthesis;
 using System.Text.RegularExpressions;
+using Jint;
 
 namespace banggood.com_scraper
 {
@@ -38,6 +39,7 @@ namespace banggood.com_scraper
         private int _maxConcurrency;
         public HttpCaller HttpCaller = new HttpCaller();
         public Dictionary<string, List<string>> dictionary = new Dictionary<string, List<string>>();
+        public static string Script = File.ReadAllText("g.js");
         public MainForm()
         {
             InitializeComponent();
@@ -59,7 +61,7 @@ namespace banggood.com_scraper
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             Utility.CreateDb();
             //Utility.LoadConfig();
-            //var x=   await Utility.ExecuteBatch("create table IF NOT EXISTS `products` (`id` INT(11) NOT NULL AUTO_INCREMENT,`Product_url` VARCHAR(255) NOT NULL,`Title` VARCHAR(255) NOT NULL,`Product_Details` long NULL,`Price` VARCHAR(255) NOT NULL,`Images` TEXT NOT NULL,PRIMARY KEY(id),`Specifications` long NOT NULL,UNIQUE(product_url);").ConfigureAwait(false);
+            //var x=   await Utility.ExecuteBatch("create table IF NOT EXISTS `products` (`id` INT(11) NOT NULL AUTO_INCREMENT,`Product_url` VARCHAR(255) NOT NULL,`Title` VARCHAR(255) NOT NULL,`ProductDetails` long NULL,`Price` VARCHAR(255) NOT NULL,`Images` TEXT NOT NULL,PRIMARY KEY(id),`Specifications` long NOT NULL,UNIQUE(ProductUrl);").ConfigureAwait(false);
             //   if (x!=null)
             //   {
             //       Console.WriteLine(x);
@@ -225,6 +227,7 @@ namespace banggood.com_scraper
                 Display("please select one category at least");
                 return;
             }
+
             await Start_ScrapingAsync();
             startB.Enabled = false;
         }
@@ -261,13 +264,28 @@ namespace banggood.com_scraper
             }
         }
 
+        async Task GetShippingDetails(string id, string warehouse)
+        {
+            var engine = new Engine().Execute(Script);
+            var sq = engine.Invoke("encrypt", $"products_id={id}&warehouse={warehouse}").AsString();
+            Console.WriteLine(sq);
+            var json = await HttpCaller.GetHtml("https://www.banggood.com/load/product/ajaxProduct.html?sq=" + sq);
+            if (json.error != null) { ErrorLog(json.error); }
+            var objetc = JObject.Parse(json.html);
+            var price = "US$" + (double)objetc.SelectToken("final_price");
+            var shippingPrice = (string)objetc.SelectToken("defaultShip.shipCost");
+            var valueIds = ((JArray)objetc.SelectToken("valueIds")).ToList();
+            
+        }
+
         private async Task Start_ScrapingAsync()
         {
             //Get_All_Product.mainform = this;
             //await Get_All_Product.Get_Products().ConfigureAwait(false);
             GetProductDetails.mainform = this;
-            //await GetProductDetails.GetDetails("https://www.banggood.com/UGOOS-AM6-S922X-2GB-RAM-16GB-ROM-5G-WIFI-1000M-LAN-bluetooth-5_0-Android-9_0-4K-TV-Box-p-1537990.html?rmmds=category&ID=533601&cur_warehouse=CN", 0);
-            await GetProductDetails.ProductsList().ConfigureAwait(false);
+            await GetShippingDetails("1513991", "CN");
+            await GetProductDetails.GetDetails("https://www.banggood.com/Women-Solid-Color-Short-Sleeve-Button-T-shirts-p-1513991.html?rmmds=category&ID=61571946157237&cur_warehouse=CN", 0);
+            //await GetProductDetails.ProductsList().ConfigureAwait(false);
         }
     }
 }

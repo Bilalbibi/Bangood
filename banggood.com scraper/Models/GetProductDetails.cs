@@ -8,8 +8,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Windows.Forms;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Logical;
-using OpenQA.Selenium.Chrome;
-using Newtonsoft.Json.Linq;
+using System.Text.RegularExpressions;
 
 namespace banggood.com_scraper.Models
 {
@@ -17,27 +16,16 @@ namespace banggood.com_scraper.Models
     {
         public static Random rnd = new Random();
         public static HttpCaller HttpCaller = new HttpCaller();
-        //public static ChromeDriver driver = new ChromeDriver();
         public static MainForm mainform { get; set; }
         public static async Task ProductsList()
         {
-            string fileName = "x.html";
-            FileInfo f = new FileInfo(fileName);
-            var fullname = f.FullName;
-            ChromeDriverService service = ChromeDriverService.CreateDefaultService();
-            service.HideCommandPromptWindow = true;
-            var options = new ChromeOptions();
-            options.AddArgument("--window-position=-32000,-32000");
-            var driver = new ChromeDriver(service, options);
-            driver.Navigate().GoToUrl(fullname);
-
             var urls = File.ReadAllLines("all products.txt").ToList();
             var products = new List<Product>();
             var tpl = new TransformBlock<(string url, int file), (Product product, string error)>
                (async x => await GetDetails(x.url, x.file).ConfigureAwait(false),
                new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = 1 });
 
-            for (int i = 200; i < 400; i++)
+            for (int i = 0; i < 400; i++)
             {
                 string url = urls[rnd.Next(0, urls.Count)];
                 tpl.Post((url, i));
@@ -46,7 +34,7 @@ namespace banggood.com_scraper.Models
             var nbr = 0;
             var query = new StringBuilder();
             var batch = 0;
-            for (var i = 0; i < 200; i++)
+            for (var i = 0; i < 400; i++)
             {
                 var res = await tpl.ReceiveAsync().ConfigureAwait(false);
                 nbr++;
@@ -95,40 +83,34 @@ namespace banggood.com_scraper.Models
                 //HtmlAgilityPack.HtmlDocument doc = new HtmlAgilityPack.HtmlDocument();
                 //doc.LoadHtml(File.ReadAllText("products/" + file + ".html"));
                 //(HtmlAgilityPack.HtmlDocument doc, string error) res = (doc, null);
-                // res.doc.Save(file + ".html");
+                //res.doc.Save(file + ".html");
+                var WHouse = res.doc.DocumentNode.SelectSingleNode("//a[@data-house]").GetAttributeValue("data-house]", "").Trim();
+                var products_id = res.doc.DocumentNode.SelectSingleNode("//input[@id='products_id']").GetAttributeValue("value", "").Trim();
+
+
                 var name = res.doc.DocumentNode?.SelectSingleNode("//strong[@class='title_strong']")?.InnerText.Trim();
                 if (name == null)
                 {
                     return (null, "item not found");
                 }
-                res = await HttpCaller.GetDoc(url);
-                var WHouse = res.doc.DocumentNode.SelectSingleNode("//a[@data-house]").GetAttributeValue("data-house]", "").Trim();
-                var products_id = res.doc.DocumentNode.SelectSingleNode("//input[@id='products_id']").GetAttributeValue("value", "").Trim();
-                ChromeDriverService service = ChromeDriverService.CreateDefaultService();
-                service.HideCommandPromptWindow = true;
-                var options = new ChromeOptions();
-                options.AddArgument("--window-position=-32000,-32000");
-                var driver = new ChromeDriver(service, options);
-                string fileName = "x.html";
-                FileInfo f = new FileInfo(fileName);
-                var fullname = f.FullName;
-                driver.Navigate().GoToUrl(fullname);
-                var sqParameter = (string)driver.ExecuteScript("return encrypt(\"products_id=" + products_id + "&warehouse=" + WHouse + "\");");
-                var json = await HttpCaller.GetHtml("https://www.banggood.com/load/product/ajaxProduct.html?sq=" + sqParameter);
-                if (json.error != null) { mainform.ErrorLog(json.error); return (null, json.error); }
-                driver.Quit();
-                var objetc = JObject.Parse(json.html);
-                //var price = res.doc.DocumentNode?.SelectSingleNode("//meta[@name='description']")?.GetAttributeValue("content", "");
-                var price = "US$" + (double)objetc.SelectToken("final_price");
-                var shippingPrice = (string)objetc.SelectToken("defaultShip.shipCost");
-                Console.WriteLine("price: " + price);
-                Console.WriteLine("shippingPrice: " + shippingPrice);
-                return (null, null);
+                var price = res.doc.DocumentNode?.SelectSingleNode("//meta[@name='description']")?.GetAttributeValue("content", "");
+                if (price.Contains("Only "))
+                {
+                    price = price.Replace("Only ", "");
+                    price = price.Substring(0, price.IndexOf(','));
+                }
+                else
+                {
+                    price = res.doc.DocumentNode?.SelectSingleNode("/html/head/title")?.InnerText.Trim();
+                    var title = price.Split('-');
+                    price = title[1];
+                }
+
                 var imagesSrc = res.doc.DocumentNode?.SelectNodes("//ul[@class='wrapper']/li/img");
                 var images = "";
                 if (imagesSrc == null)
                 {
-                    images = "NO images for this item";
+                    images = "N/A";
                 }
                 else
                 {
@@ -211,29 +193,22 @@ namespace banggood.com_scraper.Models
                 }
                 if (specifications.Count == 0)
                 {
-                    //res.doc.Save("new format.html");
-                    var tries = 0;
                     var foundSpecifics = false;
                     foreach (var line in desc.Split('\n'))
                     {
+
                         var s = line.Trim();
-                        Console.WriteLine(s);
                         if (s.Equals("")) continue;
-                        if (!foundSpecifics)
+                        if (s.ToLower().StartsWith("specification"))
                         {
-                            if (s.ToLower().StartsWith("specification"))
-                            {
-                                Console.WriteLine("Found a specification text");
-                                foundSpecifics = true;
-                                continue;
-                            }
+                            Console.WriteLine("Found a specification text");
+                            foundSpecifics = true; continue;
                         }
 
                         if (foundSpecifics)
                         {
                             if (s.Contains(":"))
                             {
-                                tries++;
                                 var x = s.Split(':');
                                 var key = x[0].Trim();
                                 var value = x[1].Trim();
@@ -245,14 +220,70 @@ namespace banggood.com_scraper.Models
                                 foundSpecifics = false;
                         }
                     }
+                }
+
+                string description = "";
+                string packageIncluded = "";
+                string features = "";
+                var productDetails = res.doc.DocumentNode.SelectSingleNode("//div[@aria-cont='productdetails']")?.InnerHtml;
+                var depart = productDetails.IndexOf("Description");
+                var thirt = productDetails.IndexOf("Features");
+                var second = productDetails.IndexOf("Package");
+                if (depart == -1)
+                {
+                    depart = productDetails.IndexOf("DESCRIPTION");
+                }
+                if (thirt > 0)
+                {
+                    var productDetails1 = productDetails.Substring(thirt);
+                    var hb = productDetails1.IndexOf(@"<strong>");
+                    var descripti = productDetails1.Substring("Features:".Length, hb);
+                    features = HtmlToPlainText(descripti);
+                }
+                if (second > 0)
+                {
+                    var productDetails1 = productDetails.Substring(second);
+                    //var hb = productDetails1.IndexOf("</p>");
+                    var descripti = productDetails1;
+                    packageIncluded = HtmlToPlainText(descripti);
+                }
+                if (depart > 0)
+                {
+                    var productDetails1 = productDetails.Substring(depart);
+                    var hb = productDetails1.IndexOf("</p>");
+                    if (hb == -1)
+                    {
+                        hb = productDetails1.IndexOf("</table>");
+                    }
+                    var dep = productDetails1.IndexOf("DESCRIPTIONS");
+                    if (dep == -1)
+                    {
+                        dep = productDetails1.IndexOf("Descriptions");
+                    }
+                    var descripti = productDetails1.Substring(12, hb);
+                    description = HtmlToPlainText(descripti);
+
 
                 }
-                product.product_url = url;
+
+                Console.WriteLine("****************************************");
+                Console.WriteLine(description);
+                Console.WriteLine("****************************************");
+                Console.WriteLine(features);
+                Console.WriteLine("****************************************");
+                Console.WriteLine(packageIncluded);
+                Console.WriteLine("****************************************");
+
+                product.Description = description;
+                product.Features = features;
+                product.PackageIncluded = packageIncluded;
+                product.ProductUrl = url;
                 product.Title = name;
                 product.Price = price;
                 product.Images = images;
                 product.Specifications = "";
-                product.Product_Details = details;
+                product.ProductDetails = details;
+
             }
             catch (Exception ex)
             {
@@ -261,6 +292,27 @@ namespace banggood.com_scraper.Models
                 Application.Exit();
             }
             return (product, null);
+        }
+        public static string HtmlToPlainText(string html)
+        {
+            const string tagWhiteSpace = @"(>|$)(\W|\n|\r)+<";//matches one or more (white space or line breaks) between '>' and '<'
+            const string stripFormatting = @"<[^>]*(>|$)";//match any character between '<' and '>', even when end tag is missing
+            const string lineBreak = @"<(br|BR)\s{0,1}\/{0,1}>";//matches: <br>,<br/>,<br />,<BR>,<BR/>,<BR />
+            var lineBreakRegex = new Regex(lineBreak, RegexOptions.Multiline);
+            var stripFormattingRegex = new Regex(stripFormatting, RegexOptions.Multiline);
+            var tagWhiteSpaceRegex = new Regex(tagWhiteSpace, RegexOptions.Multiline);
+
+            var text = html;
+
+            text = System.Net.WebUtility.HtmlDecode(text);
+
+            text = tagWhiteSpaceRegex.Replace(text, "><");
+
+            text = lineBreakRegex.Replace(text, Environment.NewLine);
+
+            text = stripFormattingRegex.Replace(text, string.Empty);
+
+            return text;
         }
     }
 }

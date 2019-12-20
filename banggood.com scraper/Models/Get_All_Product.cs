@@ -17,31 +17,16 @@ namespace banggood.com_scraper.Models
         {
             SpeechSynthesizer speak = new SpeechSynthesizer();
             speak.Speak("start scraping");
+            var res = await HttpCaller.GetDoc("https://www.banggood.com/");
+            if (res.error != null) { mainform.ErrorLog(res.error); return; }
             var allCategoriesUrl = new List<string>();
-            (HtmlAgilityPack.HtmlDocument doc, string error) res;
-            if (mainform.CategoriesSelector.Enabled==false)
+            var categoriesUrl = res.doc.DocumentNode.SelectNodes("//div[@data-id]/following-sibling::div/div//dt/following-sibling::dd/a");
+            foreach (var url in categoriesUrl)
             {
-                 res = await HttpCaller.GetDoc("https://www.banggood.com/");
-                if (res.error != null) { mainform.ErrorLog(res.error); return; }
-                var categoriesUrl = res.doc.DocumentNode.SelectNodes("//div[@data-id]/following-sibling::div/div//dt/following-sibling::dd/a");
-                foreach (var url in categoriesUrl)
-                {
-                    allCategoriesUrl.Add(url.GetAttributeValue("href", "").Trim());
-                }
-            }
-            else
-            {
-               
-                foreach (var item in mainform.CategoriesSelector.CheckedItems)
-                {
-                    if (mainform.dictionary.Keys.Contains((string)item))
-                    {
-                        allCategoriesUrl.AddRange(mainform.dictionary[(string)item]);
-                    }
-                }
+                allCategoriesUrl.Add(url.GetAttributeValue("href", "").Trim());
             }
             Console.WriteLine(allCategoriesUrl.Count);
-            return;
+
             var productsUrl = new List<string>();
             var tpl = new TransformBlock<string, (List<string> urls, string error)>
                (async x => await GetAllProductAsync(x).ConfigureAwait(false),
