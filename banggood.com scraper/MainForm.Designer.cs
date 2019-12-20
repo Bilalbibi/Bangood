@@ -35,7 +35,10 @@
             this.metroTabControl1 = new MetroFramework.Controls.MetroTabControl();
             this.metroTabPage1 = new MetroFramework.Controls.MetroTabPage();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.CategoriesSelector = new System.Windows.Forms.CheckedListBox();
+            this.AllCategories = new System.Windows.Forms.CheckBox();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.startB = new MetroFramework.Controls.MetroButton();
             this.metroTabPage2 = new MetroFramework.Controls.MetroTabPage();
             this.metroPanel2 = new MetroFramework.Controls.MetroPanel();
             this.DebugT = new System.Windows.Forms.RichTextBox();
@@ -43,6 +46,8 @@
             this.panel3.SuspendLayout();
             this.metroTabControl1.SuspendLayout();
             this.metroTabPage1.SuspendLayout();
+            this.panel2.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.metroTabPage2.SuspendLayout();
             this.metroPanel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -115,20 +120,56 @@
             // panel2
             // 
             this.panel2.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.panel2.Controls.Add(this.CategoriesSelector);
+            this.panel2.Controls.Add(this.AllCategories);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(763, 452);
             this.panel2.TabIndex = 14;
             // 
+            // CategoriesSelector
+            // 
+            this.CategoriesSelector.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.CategoriesSelector.FormattingEnabled = true;
+            this.CategoriesSelector.Location = new System.Drawing.Point(21, 78);
+            this.CategoriesSelector.Name = "CategoriesSelector";
+            this.CategoriesSelector.Size = new System.Drawing.Size(274, 174);
+            this.CategoriesSelector.TabIndex = 1;
+            // 
+            // AllCategories
+            // 
+            this.AllCategories.AutoSize = true;
+            this.AllCategories.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.AllCategories.Location = new System.Drawing.Point(21, 52);
+            this.AllCategories.Name = "AllCategories";
+            this.AllCategories.Size = new System.Drawing.Size(229, 20);
+            this.AllCategories.TabIndex = 0;
+            this.AllCategories.Text = "check/uncheck all categories";
+            this.AllCategories.UseVisualStyleBackColor = true;
+            this.AllCategories.CheckedChanged += new System.EventHandler(this.AllCategories_CheckedChanged);
+            // 
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.panel1.Controls.Add(this.startB);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Right;
             this.panel1.Location = new System.Drawing.Point(763, 0);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(170, 452);
             this.panel1.TabIndex = 6;
+            // 
+            // startB
+            // 
+            this.startB.Location = new System.Drawing.Point(25, 356);
+            this.startB.Name = "startB";
+            this.startB.Size = new System.Drawing.Size(122, 63);
+            this.startB.Style = MetroFramework.MetroColorStyle.Orange;
+            this.startB.TabIndex = 24;
+            this.startB.Text = "Start";
+            this.startB.UseSelectable = true;
+            this.startB.UseStyleColors = true;
+            this.startB.Click += new System.EventHandler(this.startB_Click_1Async);
             // 
             // metroTabPage2
             // 
@@ -206,6 +247,9 @@
             this.panel3.PerformLayout();
             this.metroTabControl1.ResumeLayout(false);
             this.metroTabPage1.ResumeLayout(false);
+            this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
+            this.panel1.ResumeLayout(false);
             this.metroTabPage2.ResumeLayout(false);
             this.metroPanel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
@@ -226,6 +270,9 @@
         private MetroFramework.Controls.MetroPanel metroPanel2;
         internal System.Windows.Forms.RichTextBox DebugT;
         private System.Windows.Forms.PictureBox pictureBox1;
+        public MetroFramework.Controls.MetroButton startB;
+        public System.Windows.Forms.CheckBox AllCategories;
+        public System.Windows.Forms.CheckedListBox CategoriesSelector;
     }
 }
 

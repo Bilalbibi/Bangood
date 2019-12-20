@@ -41,7 +41,7 @@ namespace banggood.com_scraper.Models
                 try
                 {
                     var response = await _httpClient.GetAsync(url);
-                    string html = await response.Content.ReadAsStringAsync();
+                    string html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
                     return (html, null);
                 }
                 catch (Exception ex)

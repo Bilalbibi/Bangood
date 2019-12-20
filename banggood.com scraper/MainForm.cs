@@ -37,6 +37,7 @@ namespace banggood.com_scraper
         private int _total;
         private int _maxConcurrency;
         public HttpCaller HttpCaller = new HttpCaller();
+        public Dictionary<string, List<string>> dictionary = new Dictionary<string, List<string>>();
         public MainForm()
         {
             InitializeComponent();
@@ -57,7 +58,7 @@ namespace banggood.com_scraper
             Application.ThreadException += Application_ThreadException;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             Utility.CreateDb();
-            Utility.LoadConfig();
+            //Utility.LoadConfig();
             //var x=   await Utility.ExecuteBatch("create table IF NOT EXISTS `products` (`id` INT(11) NOT NULL AUTO_INCREMENT,`Product_url` VARCHAR(255) NOT NULL,`Title` VARCHAR(255) NOT NULL,`Product_Details` long NULL,`Price` VARCHAR(255) NOT NULL,`Images` TEXT NOT NULL,PRIMARY KEY(id),`Specifications` long NOT NULL,UNIQUE(product_url);").ConfigureAwait(false);
             //   if (x!=null)
             //   {
@@ -65,7 +66,26 @@ namespace banggood.com_scraper
             //   }
             //   return;
             Utility.InitCntrl(this);
-            await Start_ScrapingAsync();
+            var res = await HttpCaller.GetDoc("https://www.banggood.com/");
+            if (res.error != null) { ErrorLog(res.error); return; }
+            var categories = res.doc.DocumentNode?.SelectNodes("//li[@class='cate-item']/div[@class='cate-title']");
+            if (categories == null) { ErrorLog("there is no categories to scrape for now"); return; }
+            foreach (var category in categories)
+            {
+                var key = category.InnerText.Trim();
+                dictionary.Add(key, null);
+                var subCategories = category.SelectNodes("./following-sibling::div//dd/a");
+                var urls = new List<string>();
+                foreach (var subCategory in subCategories)
+                {
+                    urls.Add(subCategory.GetAttributeValue("href", ""));
+                }
+                dictionary[key] = urls;
+            }
+            foreach (var dictionar in dictionary.Keys)
+            {
+                CategoriesSelector.Items.Add(dictionar);
+            }
         }
 
         static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
@@ -197,6 +217,36 @@ namespace banggood.com_scraper
                 ErrorLog(ex.ToString());
             }
         }
+
+        private async void startB_Click_1Async(object sender, EventArgs e)
+        {
+            if (CategoriesSelector.CheckedItems.Count == 0)
+            {
+                Display("please select one category at least");
+                return;
+            }
+            await Start_ScrapingAsync();
+            startB.Enabled = false;
+        }
+
+        private void AllCategories_CheckedChanged(object sender, EventArgs e)
+        {
+            if (AllCategories.Checked)
+            {
+                for (int i = 0; i < CategoriesSelector.Items.Count; i++)
+                {
+                    CategoriesSelector.SetItemChecked(i, true);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < CategoriesSelector.Items.Count; i++)
+                {
+                    CategoriesSelector.SetItemChecked(i, false);
+                }
+            }
+        }
+
         private void loadOutputB_Click_1(object sender, EventArgs e)
         {
             SaveFileDialog saveFileDialog1 = new SaveFileDialog
@@ -216,6 +266,7 @@ namespace banggood.com_scraper
             //Get_All_Product.mainform = this;
             //await Get_All_Product.Get_Products().ConfigureAwait(false);
             GetProductDetails.mainform = this;
+            //await GetProductDetails.GetDetails("https://www.banggood.com/UGOOS-AM6-S922X-2GB-RAM-16GB-ROM-5G-WIFI-1000M-LAN-bluetooth-5_0-Android-9_0-4K-TV-Box-p-1537990.html?rmmds=category&ID=533601&cur_warehouse=CN", 0);
             await GetProductDetails.ProductsList().ConfigureAwait(false);
         }
     }
