@@ -39,7 +39,7 @@ namespace banggood.com_scraper
         private int _maxConcurrency;
         public HttpCaller HttpCaller = new HttpCaller();
         public Dictionary<string, List<string>> dictionary = new Dictionary<string, List<string>>();
-        public static string Script = File.ReadAllText("g.js");
+        public  string Script = File.ReadAllText("g.js");
         public MainForm()
         {
             InitializeComponent();
@@ -275,6 +275,10 @@ namespace banggood.com_scraper
             var price = "US$" + (double)objetc.SelectToken("final_price");
             var shippingPrice = (string)objetc.SelectToken("defaultShip.shipCost");
             var valueIds = ((JArray)objetc.SelectToken("valueIds")).ToList();
+            foreach (var valueId in valueIds)
+            {
+                Console.WriteLine(valueId);
+            }
             
         }
 
@@ -283,7 +287,7 @@ namespace banggood.com_scraper
             //Get_All_Product.mainform = this;
             //await Get_All_Product.Get_Products().ConfigureAwait(false);
             GetProductDetails.mainform = this;
-            await GetShippingDetails("1513991", "CN");
+            //await GetShippingDetails("1513991", "CN");
             await GetProductDetails.GetDetails("https://www.banggood.com/Women-Solid-Color-Short-Sleeve-Button-T-shirts-p-1513991.html?rmmds=category&ID=61571946157237&cur_warehouse=CN", 0);
             //await GetProductDetails.ProductsList().ConfigureAwait(false);
         }

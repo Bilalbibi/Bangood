@@ -9,6 +9,9 @@ using System.Threading.Tasks.Dataflow;
 using System.Windows.Forms;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Logical;
 using System.Text.RegularExpressions;
+using Jint;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace banggood.com_scraper.Models
 {
@@ -16,6 +19,7 @@ namespace banggood.com_scraper.Models
     {
         public static Random rnd = new Random();
         public static HttpCaller HttpCaller = new HttpCaller();
+        public static string Script = File.ReadAllText("g.js");
         public static MainForm mainform { get; set; }
         public static async Task ProductsList()
         {
@@ -84,28 +88,61 @@ namespace banggood.com_scraper.Models
                 //doc.LoadHtml(File.ReadAllText("products/" + file + ".html"));
                 //(HtmlAgilityPack.HtmlDocument doc, string error) res = (doc, null);
                 //res.doc.Save(file + ".html");
-                var WHouse = res.doc.DocumentNode.SelectSingleNode("//a[@data-house]").GetAttributeValue("data-house]", "").Trim();
-                var products_id = res.doc.DocumentNode.SelectSingleNode("//input[@id='products_id']").GetAttributeValue("value", "").Trim();
+                string vKey = "";
+                string vValue = "";
+                var variatonsJs = "";
+                var specificationsJs = "";
+                var wareHouse = res.doc.DocumentNode.SelectSingleNode("//a[@data-house]").GetAttributeValue("data-house]", "").Trim();
+                var productsId = res.doc.DocumentNode.SelectSingleNode("//input[@id='products_id']").GetAttributeValue("value", "").Trim();
+                var JSEngine = new Engine();
+                string script = File.ReadAllText("g.js");
+                var engine = new Engine().Execute(script);
+                var sq = engine.Invoke("encrypt", $"products_id={productsId}&warehouse={wareHouse}").AsString();
+                var json = await HttpCaller.GetHtml("https://www.banggood.com/load/product/ajaxProduct.html?sq=" + sq);
+                //if (json.error != null) { ErrorLog(json.error); }
+                var objetc = JObject.Parse(json.html);
+                var price = "US$" + (double)objetc.SelectToken("final_price");
+                var shippingPrice = (string)objetc.SelectToken("defaultShip.shipCost");
+                var valueIds = ((JArray)objetc.SelectToken("valueIds")).ToList();
 
+                var variations = new Dictionary<string, string>();
+                var details = res.doc.DocumentNode?.SelectNodes("//div[@class='item_warehouse']/following-sibling::div");
+                if (details == null)
+                {
+
+                }
+                int index = 0;
+                foreach (var detail in details)
+                {
+                    if (index == valueIds.Count)
+                        break;
+                    vKey = detail?.SelectSingleNode("./span/strong")?.InnerText.Trim() ?? detail?.SelectSingleNode(".//em")?.InnerText.Trim();
+                    if (!variations.Keys.Contains(vKey))
+                    {
+                        variations.Add(vKey, "");
+                    }
+                    foreach (var item in detail.SelectNodes(".//ul[@class='clearfix']/li"))
+                    {
+                        var li = item.SelectSingleNode("./a").GetAttributeValue("value_id", "").Trim();
+                        if ((string)valueIds[index] == li)
+                        {
+                            vValue = item?.GetAttributeValue("data-old-name", "");
+                            if (vValue == "") vValue = item?.GetAttributeValue("data-large", "");
+                            //Console.WriteLine(key + " ====> " + value);
+                            variations[vKey] = vValue;
+                            index++;
+                            break;
+                        }
+                    }
+                }
+
+                 variatonsJs = JsonConvert.SerializeObject(variations, Formatting.Indented);
 
                 var name = res.doc.DocumentNode?.SelectSingleNode("//strong[@class='title_strong']")?.InnerText.Trim();
                 if (name == null)
                 {
                     return (null, "item not found");
                 }
-                var price = res.doc.DocumentNode?.SelectSingleNode("//meta[@name='description']")?.GetAttributeValue("content", "");
-                if (price.Contains("Only "))
-                {
-                    price = price.Replace("Only ", "");
-                    price = price.Substring(0, price.IndexOf(','));
-                }
-                else
-                {
-                    price = res.doc.DocumentNode?.SelectSingleNode("/html/head/title")?.InnerText.Trim();
-                    var title = price.Split('-');
-                    price = title[1];
-                }
-
                 var imagesSrc = res.doc.DocumentNode?.SelectNodes("//ul[@class='wrapper']/li/img");
                 var images = "";
                 if (imagesSrc == null)
@@ -122,15 +159,7 @@ namespace banggood.com_scraper.Models
                     images = string.Join("\r\n", list);
                 }
                 var detailsNodes = res.doc.DocumentNode?.SelectNodes("//div[@class='item_warehouse']/following-sibling::div");
-                var details = "";
-                foreach (var detailsNode in detailsNodes)
-                {
-                    if (detailsNode.InnerText.Contains("Shipping"))
-                    {
-                        break;
-                    }
-                    details = details + detailsNode.OuterHtml;
-                }
+              
                 var desc = res.doc.DocumentNode?.SelectSingleNode("//div[@class='box good_tabs_box jsPolytypeContWrap']").InnerText.Trim();
                 var specifications = new List<KeyValuePair<string, string>>();
                 var specificTable = res.doc.DocumentNode.SelectSingleNode("//span[text()='Specification:']/../../..//../following-sibling::table");
@@ -221,6 +250,7 @@ namespace banggood.com_scraper.Models
                         }
                     }
                 }
+                 specificationsJs = JsonConvert.SerializeObject(specifications, Formatting.Indented);
 
                 string description = "";
                 string packageIncluded = "";
@@ -273,6 +303,9 @@ namespace banggood.com_scraper.Models
                 Console.WriteLine("****************************************");
                 Console.WriteLine(packageIncluded);
                 Console.WriteLine("****************************************");
+                Console.WriteLine(specificationsJs);
+                Console.WriteLine("****************************************");
+                Console.WriteLine(variatonsJs);
 
                 product.Description = description;
                 product.Features = features;
@@ -281,8 +314,8 @@ namespace banggood.com_scraper.Models
                 product.Title = name;
                 product.Price = price;
                 product.Images = images;
-                product.Specifications = "";
-                product.ProductDetails = details;
+                product.Specifications = specificationsJs;
+                product.ProductDetails = variatonsJs;
 
             }
             catch (Exception ex)
