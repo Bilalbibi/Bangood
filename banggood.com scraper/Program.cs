@@ -11,6 +11,7 @@ namespace banggood.com_scraper
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
+        /// //comment
         [STAThread]
         static void Main()
         {
