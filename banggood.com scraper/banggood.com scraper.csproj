@@ -119,6 +119,7 @@
     <Compile Include="Models\GetProductDetails.cs" />
     <Compile Include="Models\Get_All_Product.cs" />
     <Compile Include="Models\HttpCaller.cs" />
+    <Compile Include="Models\PriceInfo.cs" />
     <Compile Include="Models\Product.cs" />
     <Compile Include="Models\Utility.cs" />
     <Compile Include="Program.cs" />

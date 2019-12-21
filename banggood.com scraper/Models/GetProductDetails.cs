@@ -88,67 +88,14 @@ namespace banggood.com_scraper.Models
                 //doc.LoadHtml(File.ReadAllText("products/" + file + ".html"));
                 //(HtmlAgilityPack.HtmlDocument doc, string error) res = (doc, null);
                 //res.doc.Save(file + ".html");
-                string vKey = "";
-                string vValue = "";
-                var variatonsJs = "";
-                var specificationsJs = "";
-                var wareHouse = res.doc.DocumentNode.SelectSingleNode("//a[@data-house]").GetAttributeValue("data-house]", "").Trim();
-                var productsId = res.doc.DocumentNode.SelectSingleNode("//input[@id='products_id']").GetAttributeValue("value", "").Trim();
-                var JSEngine = new Engine();
-                string script = File.ReadAllText("g.js");
-                var engine = new Engine().Execute(script);
-                var sq = engine.Invoke("encrypt", $"products_id={productsId}&warehouse={wareHouse}").AsString();
-                var json = await HttpCaller.GetHtml("https://www.banggood.com/load/product/ajaxProduct.html?sq=" + sq);
-                //if (json.error != null) { ErrorLog(json.error); }
-                var objetc = JObject.Parse(json.html);
-                var price = "US$" + (double)objetc.SelectToken("final_price");
-                var shippingPrice = (string)objetc.SelectToken("defaultShip.shipCost");
-                var valueIds = ((JArray)objetc.SelectToken("valueIds")).ToList();
-
-                var variations = new Dictionary<string, string>();
-                var details = res.doc.DocumentNode?.SelectNodes("//div[@class='item_warehouse']/following-sibling::div");
-                if (details == null)
-                {
-
-                }
-                int index = 0;
-                foreach (var detail in details)
-                {
-                    if (index == valueIds.Count)
-                        break;
-                    vKey = detail?.SelectSingleNode("./span/strong")?.InnerText.Trim() ?? detail?.SelectSingleNode(".//em")?.InnerText.Trim();
-                    if (!variations.Keys.Contains(vKey))
-                    {
-                        variations.Add(vKey, "");
-                    }
-                    foreach (var item in detail.SelectNodes(".//ul[@class='clearfix']/li"))
-                    {
-                        var li = item.SelectSingleNode("./a").GetAttributeValue("value_id", "").Trim();
-                        if ((string)valueIds[index] == li)
-                        {
-                            vValue = item?.GetAttributeValue("data-old-name", "");
-                            if (vValue == "") vValue = item?.GetAttributeValue("data-large", "");
-                            //Console.WriteLine(key + " ====> " + value);
-                            variations[vKey] = vValue;
-                            index++;
-                            break;
-                        }
-                    }
-                }
-
-                 variatonsJs = JsonConvert.SerializeObject(variations, Formatting.Indented);
-
                 var name = res.doc.DocumentNode?.SelectSingleNode("//strong[@class='title_strong']")?.InnerText.Trim();
-                if (name == null)
-                {
-                    return (null, "item not found");
-                }
+                if (name == null) return (null, "there is no product");
+
                 var imagesSrc = res.doc.DocumentNode?.SelectNodes("//ul[@class='wrapper']/li/img");
                 var images = "";
                 if (imagesSrc == null)
-                {
                     images = "N/A";
-                }
+
                 else
                 {
                     var list = new List<string>();
@@ -159,7 +106,75 @@ namespace banggood.com_scraper.Models
                     images = string.Join("\r\n", list);
                 }
                 var detailsNodes = res.doc.DocumentNode?.SelectNodes("//div[@class='item_warehouse']/following-sibling::div");
-              
+                string vKey = "";
+                string vValue = "";
+                var specificationsJs = "";
+                var wareHouse = res.doc.DocumentNode.SelectSingleNode("//a[@data-house]").GetAttributeValue("data-house]", "").Trim();
+                var productsId = res.doc.DocumentNode.SelectSingleNode("//input[@id='products_id']").GetAttributeValue("value", "").Trim();
+                var JSEngine = new Engine();
+                string script = File.ReadAllText("g.js");
+                var engine = new Engine().Execute(script);
+                var sq = engine.Invoke("encrypt", $"products_id={productsId}&warehouse={wareHouse}").AsString();
+                var json = await HttpCaller.GetHtml("https://www.banggood.com/load/product/ajaxProduct.html?sq=" + sq);
+                var dictionaryPrice = new Dictionary<string, PriceInfo>();
+                var objetc = JObject.Parse(json.html);
+                var price = "US$" + (double)objetc.SelectToken("final_price");
+                var shippingPrice = (string)objetc.SelectToken("defaultShip.shipCost");
+
+                #region variations Region
+                var variations = new Dictionary<string, string>();
+                var details = res.doc.DocumentNode.SelectNodes("//div[@class='item_warehouse']/following-sibling::div");
+                var variatonsJs = "";
+                if (details != null)
+                {
+                    if ((string)objetc?.SelectToken("valueIds") == null)
+                    {
+                        variatonsJs = "No varations fro this product";
+                    }
+                    else
+                    {
+                        var valueIds = ((JArray)objetc.SelectToken("valueIds"))?.ToList();
+                        int index = 0;
+                        foreach (var detail in details)
+                        {
+                            if (index == valueIds.Count)
+                                break;
+                            vKey = detail?.SelectSingleNode("./span/strong")?.InnerText.Trim() ?? detail?.SelectSingleNode(".//em")?.InnerText.Trim();
+                            if (!variations.Keys.Contains(vKey))
+                            {
+                                variations.Add(vKey, "");
+                            }
+                            foreach (var item in detail.SelectNodes(".//ul[@class='clearfix']/li"))
+                            {
+                                var li = item.SelectSingleNode("./a").GetAttributeValue("value_id", "").Trim();
+                                if ((string)valueIds[index] == li)
+                                {
+                                    vValue = item?.GetAttributeValue("data-old-name", "");
+                                    if (vValue == "") vValue = item?.GetAttributeValue("data-large", "");
+                                    //Console.WriteLine(key + " ====> " + value);
+                                    variations[vKey] = vValue;
+                                    index++;
+                                    break;
+                                }
+                            }
+                        }
+                        variatonsJs = JsonConvert.SerializeObject(variations, Formatting.Indented);
+                    }
+                }
+                #endregion
+                #region Prices And shipping Prices Region
+                var countries = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("contries.txt"));
+                foreach (var country in countries)
+                {
+                    json = await HttpCaller.GetHtml1(country.Value + "/load/product/ajaxProduct.html?sq=" + sq);
+                    objetc = JObject.Parse(json.html);
+                    price = "US$" + (double)objetc.SelectToken("final_price");
+                    shippingPrice = (string)objetc.SelectToken("defaultShip.shipCost");
+                    dictionaryPrice.Add(country.Key, new PriceInfo { FinalPrice = price, ShippingPrice = shippingPrice });
+                }
+                var PriceShippingPriceInfo = JsonConvert.SerializeObject(dictionaryPrice, Formatting.Indented);
+                #endregion
+                #region Specifications Region
                 var desc = res.doc.DocumentNode?.SelectSingleNode("//div[@class='box good_tabs_box jsPolytypeContWrap']").InnerText.Trim();
                 var specifications = new List<KeyValuePair<string, string>>();
                 var specificTable = res.doc.DocumentNode.SelectSingleNode("//span[text()='Specification:']/../../..//../following-sibling::table");
@@ -242,7 +257,6 @@ namespace banggood.com_scraper.Models
                                 var key = x[0].Trim();
                                 var value = x[1].Trim();
                                 if (value.Equals("")) continue;
-                                Console.WriteLine(key + " => " + value);
                                 specifications.Add(new KeyValuePair<string, string>(key, value));
                             }
                             else
@@ -250,8 +264,10 @@ namespace banggood.com_scraper.Models
                         }
                     }
                 }
-                 specificationsJs = JsonConvert.SerializeObject(specifications, Formatting.Indented);
+                specificationsJs = JsonConvert.SerializeObject(specifications, Formatting.Indented);
+                #endregion
 
+                #region description, package included and features Region
                 string description = "";
                 string packageIncluded = "";
                 string features = "";
@@ -284,39 +300,45 @@ namespace banggood.com_scraper.Models
                     if (hb == -1)
                     {
                         hb = productDetails1.IndexOf("</table>");
+                        if (hb == -1)
+                        {
+                            hb = productDetails1.IndexOf("Specification") - ("Specification").Length;
+                        }
                     }
                     var dep = productDetails1.IndexOf("DESCRIPTIONS");
                     if (dep == -1)
                     {
-                        dep = productDetails1.IndexOf("Descriptions");
+                        dep = productDetails1.IndexOf("Description");
                     }
                     var descripti = productDetails1.Substring(12, hb);
-                    description = HtmlToPlainText(descripti);
+                    description = HtmlToPlainText(descripti).Trim();
 
 
-                }
+                } 
+                #endregion
 
                 Console.WriteLine("****************************************");
-                Console.WriteLine(description);
+                Console.WriteLine("description: "+description);
                 Console.WriteLine("****************************************");
-                Console.WriteLine(features);
+                Console.WriteLine("features: " + features);
                 Console.WriteLine("****************************************");
-                Console.WriteLine(packageIncluded);
+                Console.WriteLine("packageIncluded: "+packageIncluded);
                 Console.WriteLine("****************************************");
-                Console.WriteLine(specificationsJs);
+                Console.WriteLine("specifications: "+specificationsJs);
                 Console.WriteLine("****************************************");
-                Console.WriteLine(variatonsJs);
+                Console.WriteLine("variatonsJs: "+variatonsJs);
+                Console.WriteLine("****************************************");
+                Console.WriteLine("PriceShippingPriceInfo: "+PriceShippingPriceInfo);
 
                 product.Description = description;
                 product.Features = features;
                 product.PackageIncluded = packageIncluded;
                 product.ProductUrl = url;
                 product.Title = name;
-                product.Price = price;
+                product.PriceInfos = PriceShippingPriceInfo;
                 product.Images = images;
                 product.Specifications = specificationsJs;
                 product.ProductDetails = variatonsJs;
-
             }
             catch (Exception ex)
             {
@@ -335,17 +357,15 @@ namespace banggood.com_scraper.Models
             var stripFormattingRegex = new Regex(stripFormatting, RegexOptions.Multiline);
             var tagWhiteSpaceRegex = new Regex(tagWhiteSpace, RegexOptions.Multiline);
 
-            var text = html;
+            html = System.Net.WebUtility.HtmlDecode(html);
 
-            text = System.Net.WebUtility.HtmlDecode(text);
+            html = tagWhiteSpaceRegex.Replace(html, "><");
 
-            text = tagWhiteSpaceRegex.Replace(text, "><");
+            html = lineBreakRegex.Replace(html, Environment.NewLine);
 
-            text = lineBreakRegex.Replace(text, Environment.NewLine);
+            html = stripFormattingRegex.Replace(html, string.Empty);
 
-            text = stripFormattingRegex.Replace(text, string.Empty);
-
-            return text;
+            return html;
         }
     }
 }

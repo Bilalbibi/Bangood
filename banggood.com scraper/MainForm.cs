@@ -288,7 +288,7 @@ namespace banggood.com_scraper
             //await Get_All_Product.Get_Products().ConfigureAwait(false);
             GetProductDetails.mainform = this;
             //await GetShippingDetails("1513991", "CN");
-            await GetProductDetails.GetDetails("https://www.banggood.com/Women-Solid-Color-Short-Sleeve-Button-T-shirts-p-1513991.html?rmmds=category&ID=61571946157237&cur_warehouse=CN", 0);
+            await GetProductDetails.GetDetails("https://www.banggood.com/Closed-Loop-CNC-HSS86-Hybrid-Driver-with-Nema34-Servo-Stepper-Motor-12N_m-Set-p-1226791.html?rmmds=category&cur_warehouse=CN", 0);
             //await GetProductDetails.ProductsList().ConfigureAwait(false);
         }
     }
