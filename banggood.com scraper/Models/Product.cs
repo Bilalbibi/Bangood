@@ -14,7 +14,7 @@ namespace banggood.com_scraper.Models
         public string PriceInfos { get; set; }
         public string Images { get; set; }
         public string Specifications { get; set; }
-        public string Description { get; set; }
+        public string DescriptionInfo { get; set; }
         public string Features { get; set; }
         public string PackageIncluded { get; set; }
 

@@ -227,9 +227,16 @@ namespace banggood.com_scraper
                 Display("please select one category at least");
                 return;
             }
-
-            await Start_ScrapingAsync();
             startB.Enabled = false;
+            //await Start_ScrapingAsync();
+            //Get_All_Product.mainform = this;
+            //await Get_All_Product.Get_Products().ConfigureAwait(false);
+            GetProductDetails.mainform = this;
+            //await GetShippingDetails("1513991", "CN");
+            //await GetProductDetails.GetDetails("https://www.banggood.com/Women-Pure-Color-Long-Sleeve-Pleated-Back-Buttons-Asymmetrical-Blouse-p-1186465.html?rmmds=category&ID=32693146&cur_warehouse=CN");
+            await GetProductDetails.ProductsList();
+            startB.Enabled = true;
+
         }
 
         private void AllCategories_CheckedChanged(object sender, EventArgs e)
@@ -288,7 +295,7 @@ namespace banggood.com_scraper
             //await Get_All_Product.Get_Products().ConfigureAwait(false);
             GetProductDetails.mainform = this;
             //await GetShippingDetails("1513991", "CN");
-            await GetProductDetails.GetDetails("https://www.banggood.com/Closed-Loop-CNC-HSS86-Hybrid-Driver-with-Nema34-Servo-Stepper-Motor-12N_m-Set-p-1226791.html?rmmds=category&cur_warehouse=CN", 0);
+            await GetProductDetails.GetDetails("https://www.banggood.com/Corduroy-Stripe-Print-Patchwork-Long-Sleeve-Vintage-Blouse-p-1561500.html?rmmds=category");
             //await GetProductDetails.ProductsList().ConfigureAwait(false);
         }
     }
