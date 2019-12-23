@@ -127,7 +127,7 @@ namespace banggood.com_scraper.Models
                 var variatonsJs = "";
                 if (details != null)
                 {
-                    if (objetc.SelectToken("valueIds") == null)
+                    if (!objetc.SelectToken("valueIds").HasValues)
                     {
                         variatonsJs = "No varations fro this product";
                     }

@@ -233,8 +233,8 @@ namespace banggood.com_scraper
             //await Get_All_Product.Get_Products().ConfigureAwait(false);
             GetProductDetails.mainform = this;
             //await GetShippingDetails("1513991", "CN");
-            //await GetProductDetails.GetDetails("https://www.banggood.com/Women-Pure-Color-Long-Sleeve-Pleated-Back-Buttons-Asymmetrical-Blouse-p-1186465.html?rmmds=category&ID=32693146&cur_warehouse=CN");
-            await GetProductDetails.ProductsList();
+            await GetProductDetails.GetDetails("https://www.banggood.com/3pcs-HSS-Round-Shank-Titanium-Coated-Quick-Change-Step-Drill-Bits-316-12-18-12-14-34-Inch-p-1044420.html?rmmds=category&cur_warehouse=CN");
+            //await GetProductDetails.ProductsList();
             startB.Enabled = true;
 
         }
