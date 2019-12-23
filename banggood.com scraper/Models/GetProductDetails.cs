@@ -259,13 +259,15 @@ namespace banggood.com_scraper.Models
                             if (s.Contains(":"))
                             {
                                 var x = s.Split(':');
+                                if (x[0].StartsWith("Attention") || x[1].Trim() == "")
+                                    break;
                                 var key = x[0].Trim();
                                 var value = x[1].Trim();
                                 if (value.Equals("")) continue;
                                 specifications.Add(new KeyValuePair<string, string>(key, value));
                             }
-                            else
-                                foundSpecifics = false;
+                            //else
+                            //    foundSpecifics = false;
                         }
                     }
                 }
