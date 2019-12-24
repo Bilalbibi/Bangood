@@ -134,14 +134,14 @@ namespace banggood.com_scraper.Models
                     else
                     {
                         var valueIds = ((JArray)objetc.SelectToken("valueIds"))?.ToList();
-                        
+
                         foreach (var detail in details)
                         {
-                            
+
                             Key = detail?.SelectSingleNode(".//span")?.InnerText.Trim(); //?? detail?.SelectSingleNode(".//em")?.InnerText.Trim()
                             if (string.IsNullOrEmpty(Key))
                                 break;
-                            Key = Key.Replace(":","").Trim();
+                            Key = Key.Replace(":", "").Trim();
                             //Console.WriteLine("key: "+ Key);
                             if (!variations.Keys.Contains(Key))
                             {
@@ -240,7 +240,7 @@ namespace banggood.com_scraper.Models
                         }
                     }
                 }
-                if (specifications.Count == 0)
+                if (specifications.Count == 0 && desc.ToLower().Contains("specification"))
                 {
                     var foundSpecifics = false;
                     foreach (var line in desc.Split('\n'))
@@ -269,7 +269,10 @@ namespace banggood.com_scraper.Models
                         }
                     }
                 }
-                specificationsJs = JsonConvert.SerializeObject(specifications, Formatting.Indented);
+                if (specifications.Count > 0)
+                    specificationsJs = JsonConvert.SerializeObject(specifications, Formatting.Indented);
+                else
+                    specificationsJs = "";
                 #endregion
                 #region description, package included and features Region
                 string description = "";
@@ -318,21 +321,21 @@ namespace banggood.com_scraper.Models
                     description = HtmlToPlainText(descripti).Trim();
 
 
-                } 
+                }
                 #endregion
 
                 Console.WriteLine("****************************************");
-                Console.WriteLine("description: "+description);
+                Console.WriteLine("description: " + description);
                 Console.WriteLine("****************************************");
                 Console.WriteLine("features: " + features);
                 Console.WriteLine("****************************************");
-                Console.WriteLine("packageIncluded: "+packageIncluded);
+                Console.WriteLine("packageIncluded: " + packageIncluded);
                 Console.WriteLine("****************************************");
-                Console.WriteLine("specifications: "+specificationsJs);
+                Console.WriteLine("specifications: " + specificationsJs);
                 Console.WriteLine("****************************************");
-                Console.WriteLine("variatonsJs: "+variatonsJs);
+                Console.WriteLine("variatonsJs: " + variatonsJs);
                 Console.WriteLine("****************************************");
-                Console.WriteLine("PriceShippingPriceInfo: "+PriceShippingPriceInfo);
+                Console.WriteLine("PriceShippingPriceInfo: " + PriceShippingPriceInfo);
 
                 product.DescriptionInfo = description;
                 product.Features = features;
