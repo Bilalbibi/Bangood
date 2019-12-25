@@ -16,7 +16,7 @@ namespace banggood.com_scraper.Models
     {
         public static string ConnectionString = "Data Source=system.db;Version=3;";
         public static string SimpleDateFormat = "dd/MM/yyyy HH:mm:ss";
-        public static string mySqlConnection = "server=localhost;port=3306;database=dealerspike;user=root; password=bilel;";//spike  Jmz7k5BFeWMx! 104.238.214.40 localhost
+        public static string mySqlConnection = "server=localhost;port=3306;database=dealerspike;user=root;password=bilel;";//spike  Jmz7k5BFeWMx! 104.238.214.40 localhost
         public static Dictionary<string, string> Config = new Dictionary<string, string>();
         //Used to load UI components last state from config dictionary
         public static void InitCntrl(Control parent)
@@ -202,6 +202,27 @@ namespace banggood.com_scraper.Models
             catch (Exception e)
             {
                 return e.ToString();
+            }
+        }
+        public static async Task<(HashSet<string> urls, string error)> GetUrls()
+        {
+            var urls = new HashSet<string>();
+            try
+            {
+                using (var c = new MySqlConnection(mySqlConnection))
+                {
+                    await c.OpenAsync().ConfigureAwait(false);
+                    using (var fmd = new MySqlCommand("SELECT ProductUrl from products", c))
+                    using (var r = (MySqlDataReader)await fmd.ExecuteReaderAsync().ConfigureAwait(false))
+                        while (await r.ReadAsync().ConfigureAwait(false))
+                            urls.Add(r.GetString("ProductUrl"));
+
+                }
+                return (urls, null);
+            }
+            catch (Exception ex)
+            {
+                return (null, ex.ToString());
             }
         }
     }

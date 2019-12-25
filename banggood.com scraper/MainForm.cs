@@ -1,26 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Data.SQLite;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using MetroFramework.Controls;
 using MetroFramework.Forms;
 using Newtonsoft.Json.Linq;
 using banggood.com_scraper.Models;
-using OfficeOpenXml;
-using System.Threading.Tasks.Dataflow;
-using System.Speech.Synthesis;
-using System.Text.RegularExpressions;
 using Jint;
 
 namespace banggood.com_scraper
@@ -29,17 +18,11 @@ namespace banggood.com_scraper
     {
         public bool LogToUi = true;
         public bool LogToFile = true;
-        ExcelPackage _package;
-        ExcelWorksheet _worksheet;
-        int _r;
         Random rnd = new Random();
         private readonly string _path = Application.StartupPath;
-        private int _nbr;
-        private int _total;
-        private int _maxConcurrency;
         public HttpCaller HttpCaller = new HttpCaller();
         public Dictionary<string, List<string>> dictionary = new Dictionary<string, List<string>>();
-        public  string Script = File.ReadAllText("g.js");
+        public string Script = File.ReadAllText("g.js");
         public MainForm()
         {
             InitializeComponent();
@@ -180,12 +163,6 @@ namespace banggood.com_scraper
         }
         private async void startB_Click(object sender, EventArgs e)
         {
-            //LogToUi = logToUII.Checked;
-            //LogToFile = logToFileI.Checked;
-            //_maxConcurrency = (int)delayMinI.Value;
-            //we spin it in a new worker thread
-            //Task.Run(MainWork);
-            //we run mainWork on the UI thread
             await MainWork();
 
         }
@@ -194,14 +171,12 @@ namespace banggood.com_scraper
             OpenFileDialog o = new OpenFileDialog { Filter = @"xlsx|*.xlsx", InitialDirectory = _path };
             if (o.ShowDialog() == DialogResult.OK)
             {
-                //inputI.Text = o.FileName;
             }
         }
         private void openInputB_Click_1(object sender, EventArgs e)
         {
             try
             {
-                //Process.Start(inputI.Text);
             }
             catch (Exception ex)
             {
@@ -212,7 +187,6 @@ namespace banggood.com_scraper
         {
             try
             {
-                //Process.Start(outputI.Text);
             }
             catch (Exception ex)
             {
@@ -228,13 +202,11 @@ namespace banggood.com_scraper
                 return;
             }
             startB.Enabled = false;
-            //await Start_ScrapingAsync();
-            //Get_All_Product.mainform = this;
-            //await Get_All_Product.Get_Products().ConfigureAwait(false);
+            Get_All_Product.mainform = this;
+            await Get_All_Product.Get_Products();
             GetProductDetails.mainform = this;
-            //await GetShippingDetails("1513991", "CN");
-            await GetProductDetails.GetDetails("https://www.banggood.com/3pcs-HSS-Round-Shank-Titanium-Coated-Quick-Change-Step-Drill-Bits-316-12-18-12-14-34-Inch-p-1044420.html?rmmds=category&cur_warehouse=CN");
-            //await GetProductDetails.ProductsList();
+            //await GetProductDetails.GetDetails("https://www.banggood.com/Women-Special-Colorful-DIY-Lamb-Hair-Bag-Crossbody-Bag-For-Daily-Outdoor-p-1596479.html?rmmds=category&ID=6157241&cur_warehouse=CN");
+            await GetProductDetails.ProductsList();
             startB.Enabled = true;
 
         }
@@ -286,17 +258,7 @@ namespace banggood.com_scraper
             {
                 Console.WriteLine(valueId);
             }
-            
-        }
 
-        private async Task Start_ScrapingAsync()
-        {
-            //Get_All_Product.mainform = this;
-            //await Get_All_Product.Get_Products().ConfigureAwait(false);
-            GetProductDetails.mainform = this;
-            //await GetShippingDetails("1513991", "CN");
-            await GetProductDetails.GetDetails("https://www.banggood.com/Corduroy-Stripe-Print-Patchwork-Long-Sleeve-Vintage-Blouse-p-1561500.html?rmmds=category");
-            //await GetProductDetails.ProductsList().ConfigureAwait(false);
         }
     }
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Speech.Synthesis;
-using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
@@ -17,16 +16,30 @@ namespace banggood.com_scraper.Models
         {
             SpeechSynthesizer speak = new SpeechSynthesizer();
             speak.Speak("start scraping");
-            var res = await HttpCaller.GetDoc("https://www.banggood.com/");
-            if (res.error != null) { mainform.ErrorLog(res.error); return; }
             var allCategoriesUrl = new List<string>();
-            var categoriesUrl = res.doc.DocumentNode.SelectNodes("//div[@data-id]/following-sibling::div/div//dt/following-sibling::dd/a");
-            foreach (var url in categoriesUrl)
+            if (mainform.AllCategories.Checked)
             {
-                allCategoriesUrl.Add(url.GetAttributeValue("href", "").Trim());
+                var res = await HttpCaller.GetDoc("https://www.banggood.com/");
+                if (res.error != null) { mainform.ErrorLog(res.error); return; }
+                var categoriesUrl = res.doc.DocumentNode.SelectNodes("//div[@data-id]/following-sibling::div/div//dt/following-sibling::dd/a");
+                foreach (var url in categoriesUrl)
+                {
+                    allCategoriesUrl.Add(url.GetAttributeValue("href", "").Trim());
+                }
+            }
+            else
+            {
+                foreach (var category in mainform.CategoriesSelector.CheckedItems)
+                {
+                    var res = await HttpCaller.GetDoc("https://www.banggood.com/");
+                    var categoriesUrl = res.doc.DocumentNode.SelectNodes($"//a[text()=\"{(string)category}\"]/../following-sibling::div//dl/dd/a");
+                    foreach (var url in categoriesUrl)
+                    {
+                        allCategoriesUrl.Add(url.GetAttributeValue("href", "").Trim());
+                    }
+                }
             }
             Console.WriteLine(allCategoriesUrl.Count);
-
             var productsUrl = new List<string>();
             var tpl = new TransformBlock<string, (List<string> urls, string error)>
                (async x => await GetAllProductAsync(x).ConfigureAwait(false),
