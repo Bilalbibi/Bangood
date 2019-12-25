@@ -27,6 +27,7 @@ namespace banggood.com_scraper.Models
                     allCategoriesUrl.Add(url.GetAttributeValue("href", "").Trim());
                 }
             }
+
             else
             {
                 foreach (var category in mainform.CategoriesSelector.CheckedItems)
