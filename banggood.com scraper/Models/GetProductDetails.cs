@@ -113,7 +113,6 @@ namespace banggood.com_scraper.Models
                     {
                         mainform.ErrorLog($"Error inserting into db {r}");
                         Console.WriteLine(query);
-                        Application.Exit();
                     }
                     query.Clear();
                     batch = 0;
@@ -127,7 +126,6 @@ namespace banggood.com_scraper.Models
                 {
                     mainform.ErrorLog($"Error inserting into db {r}");
                     Console.WriteLine(query);
-                    Application.Exit();
                 }
             }
         }
