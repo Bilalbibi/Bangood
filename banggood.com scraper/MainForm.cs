@@ -204,9 +204,9 @@ namespace banggood.com_scraper
             startB.Enabled = false;
             Get_All_Product.mainform = this;
             await Get_All_Product.Get_Products();
-            GetProductDetails.mainform = this;
+            //GetProductDetails.mainform = this;
             //await GetProductDetails.GetDetails("https://www.banggood.com/Women-Special-Colorful-DIY-Lamb-Hair-Bag-Crossbody-Bag-For-Daily-Outdoor-p-1596479.html?rmmds=category&ID=6157241&cur_warehouse=CN");
-            await GetProductDetails.ProductsList();
+            //await GetProductDetails.ProductsList();
             startB.Enabled = true;
 
         }

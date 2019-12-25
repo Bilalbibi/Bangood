@@ -96,8 +96,9 @@ namespace banggood.com_scraper.Models
                         urlp = item.GetAttributeValue("href", "");
                         if (urlp.Contains("similarId"))
                             continue;
-                        urlp = urlp.Substring(0, urlp.IndexOf("html") + 4);
-                        itemsUrlOfcategory.Add(item.GetAttributeValue("href", ""));
+                        if (urlp.Contains("?"))
+                            urlp = urlp.Substring(0, urlp.IndexOf("?"));
+                        itemsUrlOfcategory.Add(urlp);
                     }
                     url = res.doc.DocumentNode.SelectSingleNode("//a[contains(@class,'nextPage')]")?.GetAttributeValue("href", "") ?? "https://www.banggood.com/" + res.doc.DocumentNode.SelectSingleNode("//a[@class='next']")?.GetAttributeValue("href", "");
                     if (url == null || url == "https://www.banggood.com/")
