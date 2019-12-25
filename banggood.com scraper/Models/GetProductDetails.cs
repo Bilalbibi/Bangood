@@ -110,10 +110,7 @@ namespace banggood.com_scraper.Models
                 {
                     var r = await Utility.ExecuteBatch($"{query}").ConfigureAwait(false);
                     if (r != null)
-                    {
                         mainform.ErrorLog($"Error inserting into db {r}");
-                        Console.WriteLine(query);
-                    }
                     query.Clear();
                     batch = 0;
                 }
@@ -123,10 +120,7 @@ namespace banggood.com_scraper.Models
             {
                 var r = await Utility.ExecuteBatch($"{query}").ConfigureAwait(false);
                 if (r != null)
-                {
                     mainform.ErrorLog($"Error inserting into db {r}");
-                    Console.WriteLine(query);
-                }
             }
         }
 
