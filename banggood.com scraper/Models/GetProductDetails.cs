@@ -347,15 +347,33 @@ namespace banggood.com_scraper.Models
                 {
                     var productDetails1 = productDetails.Substring(thirt);
                     var hb = productDetails1.IndexOf(@"<strong>");
-                    var descripti = productDetails1.Substring("Features:".Length, hb);
-                    features = HtmlToPlainText(descripti);
+                    if (hb > "Features:".Length)
+                    {
+                        var descripti = productDetails1.Substring("Features:".Length, hb);
+                        features = HtmlToPlainText(descripti);
+                    }
+
                 }
                 if (second > 0)
                 {
+                    second = second + "Package Included:".Length;
+                    var descripti = "";
                     var productDetails1 = productDetails.Substring(second);
-                    //var hb = productDetails1.IndexOf("</p>");
-                    var descripti = productDetails1;
-                    packageIncluded = HtmlToPlainText(descripti);
+                    var hb = productDetails1.IndexOf("More details:") - ("More details:").Length;
+                    if (hb < 0)
+                    {
+                        hb = productDetails1.IndexOf("More Details:") - ("More Details:").Length;
+                    }
+
+                    if (hb > 0)
+                    {
+                        descripti = productDetails1.Substring(0, hb);
+                    }
+                    else
+                    {
+                        descripti = productDetails1;
+                    }
+                    packageIncluded = HtmlToPlainText(descripti).Trim();
                 }
                 if (depart > 0)
                 {
@@ -363,19 +381,26 @@ namespace banggood.com_scraper.Models
                     var hb = productDetails1.IndexOf("</p>");
                     if (hb == -1)
                     {
-                        hb = productDetails1.IndexOf("</table>");
-                        if (hb == -1)
-                        {
+                        if (productDetails1.IndexOf("Specification:") > 0)
                             hb = productDetails1.IndexOf("Specification") - ("Specification").Length;
-                        }
+
                     }
-                    var dep = productDetails1.IndexOf("DESCRIPTIONS");
-                    if (dep == -1)
+                    if (hb == -1)
                     {
-                        dep = productDetails1.IndexOf("Description");
+
+
+                        hb = productDetails1.IndexOf("</table>");
                     }
-                    var descripti = productDetails1.Substring(12, hb);
-                    description = HtmlToPlainText(descripti).Trim();
+                    if (hb == -1)
+                    {
+                        hb = productDetails1.IndexOf("Package Included") - ("Package Included").Length;
+                    }
+                    if (hb > 12)
+                    {
+                        var descripti = productDetails1.Substring(12, hb);
+                        description = HtmlToPlainText(descripti).Trim();
+                    }
+
 
 
                 }
