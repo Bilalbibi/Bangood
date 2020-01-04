@@ -30,7 +30,7 @@ namespace banggood.com_scraper.Models
 
             else
             {
-                foreach (var category in mainform.CategoriesSelector.CheckedItems)
+                foreach (var category in mainform.CategoriesSelector.CheckedItems)//mainform.MyTree.SelectedNode
                 {
                     var res = await HttpCaller.GetDoc("https://www.banggood.com/");
                     var categoriesUrl = res.doc.DocumentNode.SelectNodes($"//a[text()=\"{(string)category}\"]/../following-sibling::div//dl/dd/a");

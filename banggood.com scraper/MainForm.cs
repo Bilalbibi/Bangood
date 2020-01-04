@@ -21,7 +21,7 @@ namespace banggood.com_scraper
         Random rnd = new Random();
         private readonly string _path = Application.StartupPath;
         public HttpCaller HttpCaller = new HttpCaller();
-        public Dictionary<string, List<string>> dictionary = new Dictionary<string, List<string>>();
+        public Dictionary<string, string> dictionary = new Dictionary<string,string>();
         public string Script = File.ReadAllText("g.js");
         public MainForm()
         {
@@ -55,22 +55,23 @@ namespace banggood.com_scraper
             if (res.error != null) { ErrorLog(res.error); return; }
             var categories = res.doc.DocumentNode?.SelectNodes("//li[@class='cate-item']/div[@class='cate-title']");
             if (categories == null) { ErrorLog("there is no categories to scrape for now"); return; }
-            foreach (var category in categories)
+            for (int i = 0; i < categories.Count; i++)
             {
-                var key = category.InnerText.Trim();
-                dictionary.Add(key, null);
-                var subCategories = category.SelectNodes("./following-sibling::div//dd/a");
-                var urls = new List<string>();
+                MyTree.Nodes.Add(categories[i]?.InnerText);
+                var subCategories = categories[i].SelectNodes("./following-sibling::div//dd/a");
+
                 foreach (var subCategory in subCategories)
                 {
-                    urls.Add(subCategory.GetAttributeValue("href", ""));
+                    var key = subCategory.InnerText.Trim();
+                    dictionary.Add(key, null);
+                    MyTree.Nodes[i].Nodes.Add(subCategory?.InnerText);
+                    var urls = subCategory.GetAttributeValue("href", "");
+                    dictionary[key] = urls;
                 }
-                dictionary[key] = urls;
             }
-            foreach (var dictionar in dictionary.Keys)
-            {
-                CategoriesSelector.Items.Add(dictionar);
-            }
+
+
+          
         }
 
         static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
@@ -195,12 +196,28 @@ namespace banggood.com_scraper
         }
 
         private async void startB_Click_1Async(object sender, EventArgs e)
-        {
-            if (CategoriesSelector.CheckedItems.Count == 0)
+        {/*
+             foreach (TreeNode tn in MyTree.Nodes)
+             {
+                 foreach (TreeNode tn2 in tn.Nodes)
+                 {
+                     if (!tn2.Checked)
+                     {
+                         Display("please select one category at least");
+                         return;
+                     }
+                 }
+
+             }*/
+           
+            var tn =MyTree.SelectedNode;
+            if (tn==null)
             {
                 Display("please select one category at least");
                 return;
+
             }
+         
             startB.Enabled = false;
             Get_All_Product.mainform = this;
             await Get_All_Product.Get_Products();
@@ -215,17 +232,54 @@ namespace banggood.com_scraper
         {
             if (AllCategories.Checked)
             {
-                for (int i = 0; i < CategoriesSelector.Items.Count; i++)
+                foreach (TreeNode node in MyTree.Nodes)
                 {
-                    CategoriesSelector.SetItemChecked(i, true);
+                    node.Checked = true;
+                    CheckChildren(node, true);
                 }
             }
             else
             {
-                for (int i = 0; i < CategoriesSelector.Items.Count; i++)
+                foreach (TreeNode node in MyTree.Nodes)
                 {
-                    CategoriesSelector.SetItemChecked(i, false);
+                    node.Checked = false;
+                    CheckChildren(node, false);
                 }
+            }
+        }
+        private void CheckChildren(TreeNode rootNode, bool isChecked)
+        {
+            foreach (TreeNode node in rootNode.Nodes)
+            {
+                CheckChildren(node, isChecked);
+                node.Checked = isChecked;
+            }
+        }
+        private void TreeNode_Clicked(object sender, TreeViewCancelEventArgs e)
+        {
+           
+        }
+
+        private void MyTree_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+
+        }
+
+        private void MyTree_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void MyTree_AfterCheck(object sender, TreeViewEventArgs e)
+        {
+            bool checkChildren = (e.Node.Checked);
+            if (MyTree.Nodes.Count == 0)
+            {
+                return;
+            }
+            foreach (TreeNode childNode in e.Node.Nodes)
+            {
+                childNode.Checked = !childNode.Checked;
             }
         }
 

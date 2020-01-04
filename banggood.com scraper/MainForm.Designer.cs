@@ -35,7 +35,7 @@
             this.metroTabControl1 = new MetroFramework.Controls.MetroTabControl();
             this.metroTabPage1 = new MetroFramework.Controls.MetroTabPage();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.CategoriesSelector = new System.Windows.Forms.CheckedListBox();
+            this.MyTree = new System.Windows.Forms.TreeView();
             this.AllCategories = new System.Windows.Forms.CheckBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.startB = new MetroFramework.Controls.MetroButton();
@@ -120,7 +120,7 @@
             // panel2
             // 
             this.panel2.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.panel2.Controls.Add(this.CategoriesSelector);
+            this.panel2.Controls.Add(this.MyTree);
             this.panel2.Controls.Add(this.AllCategories);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
@@ -128,20 +128,23 @@
             this.panel2.Size = new System.Drawing.Size(763, 452);
             this.panel2.TabIndex = 14;
             // 
-            // CategoriesSelector
+            // MyTree
             // 
-            this.CategoriesSelector.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.CategoriesSelector.FormattingEnabled = true;
-            this.CategoriesSelector.Location = new System.Drawing.Point(21, 78);
-            this.CategoriesSelector.Name = "CategoriesSelector";
-            this.CategoriesSelector.Size = new System.Drawing.Size(274, 174);
-            this.CategoriesSelector.TabIndex = 1;
+            this.MyTree.BackColor = System.Drawing.Color.White;
+            this.MyTree.CheckBoxes = true;
+            this.MyTree.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.MyTree.Location = new System.Drawing.Point(0, 25);
+            this.MyTree.Name = "MyTree";
+            this.MyTree.Size = new System.Drawing.Size(431, 424);
+            this.MyTree.TabIndex = 2;
+            this.MyTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.MyTree_AfterCheck);
+            this.MyTree.Click += new System.EventHandler(this.MyTree_Click);
             // 
             // AllCategories
             // 
             this.AllCategories.AutoSize = true;
             this.AllCategories.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.AllCategories.Location = new System.Drawing.Point(21, 52);
+            this.AllCategories.Location = new System.Drawing.Point(3, 3);
             this.AllCategories.Name = "AllCategories";
             this.AllCategories.Size = new System.Drawing.Size(229, 20);
             this.AllCategories.TabIndex = 0;
@@ -272,7 +275,7 @@
         private System.Windows.Forms.PictureBox pictureBox1;
         public MetroFramework.Controls.MetroButton startB;
         public System.Windows.Forms.CheckBox AllCategories;
-        public System.Windows.Forms.CheckedListBox CategoriesSelector;
+        private System.Windows.Forms.TreeView MyTree;
     }
 }
 
