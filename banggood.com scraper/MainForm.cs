@@ -21,7 +21,7 @@ namespace banggood.com_scraper
         Random rnd = new Random();
         private readonly string _path = Application.StartupPath;
         public HttpCaller HttpCaller = new HttpCaller();
-        public Dictionary<string, string> dictionary = new Dictionary<string,string>();
+        public Dictionary<string, string> dictionary = new Dictionary<string, string>();
         public string Script = File.ReadAllText("g.js");
         public MainForm()
         {
@@ -63,15 +63,15 @@ namespace banggood.com_scraper
                 foreach (var subCategory in subCategories)
                 {
                     var key = subCategory.InnerText.Trim();
-                    dictionary.Add(key, null);
-                    MyTree.Nodes[i].Nodes.Add(subCategory?.InnerText);
-                    var urls = subCategory.GetAttributeValue("href", "");
-                    dictionary[key] = urls;
+                    ////dictionary.Add(key, null);
+                    MyTree.Nodes[i].Nodes.Add(subCategory.GetAttributeValue("href", ""), subCategory?.InnerText);
+                    //var urls = subCategory.GetAttributeValue("href", "");
+                    //dictionary[key] = urls;
                 }
             }
 
 
-          
+
         }
 
         static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
@@ -196,31 +196,29 @@ namespace banggood.com_scraper
         }
 
         private async void startB_Click_1Async(object sender, EventArgs e)
-        {/*
-             foreach (TreeNode tn in MyTree.Nodes)
-             {
-                 foreach (TreeNode tn2 in tn.Nodes)
-                 {
-                     if (!tn2.Checked)
-                     {
-                         Display("please select one category at least");
-                         return;
-                     }
-                 }
+        {
+            var selectedCategories = new List<KeyValuePair<string, string>>();
+            foreach (TreeNode treeNode in MyTree.Nodes)
+            {
+                foreach (TreeNode node in treeNode.Nodes)
+                {
+                    if (!node.Checked) continue;
+                    selectedCategories.Add(new KeyValuePair<string, string>(node.Name, node.Text));
+                }
+            }
 
-             }*/
-           
-            var tn =MyTree.SelectedNode;
-            if (tn==null)
+            if (selectedCategories.Count == 0)
             {
                 Display("please select one category at least");
                 return;
 
             }
-         
+
             startB.Enabled = false;
             Get_All_Product.mainform = this;
-            await Get_All_Product.Get_Products();
+           
+            await Get_All_Product.Get_Products(selectedCategories);
+
             GetProductDetails.mainform = this;
             //await GetProductDetails.GetDetails("https://www.banggood.com/Women-Special-Colorful-DIY-Lamb-Hair-Bag-Crossbody-Bag-For-Daily-Outdoor-p-1596479.html?rmmds=category&ID=6157241&cur_warehouse=CN");
             await GetProductDetails.ProductsList();
@@ -257,7 +255,7 @@ namespace banggood.com_scraper
         }
         private void TreeNode_Clicked(object sender, TreeViewCancelEventArgs e)
         {
-           
+
         }
 
         private void MyTree_AfterSelect(object sender, TreeViewEventArgs e)

@@ -12,7 +12,7 @@ namespace banggood.com_scraper.Models
     {
         public static HttpCaller HttpCaller = new HttpCaller();
         public static MainForm mainform;
-        public static async Task Get_Products()
+        public static async Task Get_Products(List<KeyValuePair<string,string>> selectedCategories)
         {
             SpeechSynthesizer speak = new SpeechSynthesizer();
             speak.Speak("start scraping");
@@ -30,15 +30,15 @@ namespace banggood.com_scraper.Models
 
             else
             {
-                foreach (var category in mainform.CategoriesSelector.CheckedItems)//mainform.MyTree.SelectedNode
-                {
-                    var res = await HttpCaller.GetDoc("https://www.banggood.com/");
-                    var categoriesUrl = res.doc.DocumentNode.SelectNodes($"//a[text()=\"{(string)category}\"]/../following-sibling::div//dl/dd/a");
-                    foreach (var url in categoriesUrl)
-                    {
-                        allCategoriesUrl.Add(url.GetAttributeValue("href", "").Trim());
-                    }
-                }
+                //foreach (var category in mainform.CategoriesSelector.CheckedItems)//mainform.MyTree.SelectedNode
+                //{
+                //    var res = await HttpCaller.GetDoc("https://www.banggood.com/");
+                //    var categoriesUrl = res.doc.DocumentNode.SelectNodes($"//a[text()=\"{(string)category}\"]/../following-sibling::div//dl/dd/a");
+                //    foreach (var url in categoriesUrl)
+                //    {
+                //        allCategoriesUrl.Add(url.GetAttributeValue("href", "").Trim());
+                //    }
+                //}
             }
             Console.WriteLine(allCategoriesUrl.Count);
             var productsUrl = new List<string>();
